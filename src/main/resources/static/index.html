@@ -133,7 +133,7 @@
                     <!--</el-switch>-->
                 </h4>
                 <p v-for="player of room.players">{{ player }}</p>
-                <el-button v-if="room.roomer && room.roomer == userId && !started" size="small" type="primary" @click="startGame">开始游戏</el-button>
+                <el-button v-if="starter && starter == userId && !started" size="small" type="primary" @click="startGame">开始游戏</el-button>
             </el-aside>
             <el-container v-if="started">
 

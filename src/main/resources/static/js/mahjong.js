@@ -6,6 +6,9 @@ var REQUEST_TYPE = {
     START_GAME: "START_GAME",
     DISPATCH: "DISPATCH",
     FIRE: "FIRE",
+    GANG: "GANG",
+    HU: "HU",
+    GIVE_UP: "GIVE_UP",
 }
 var RESPONSE_TYPE = {
     CONNECT: "CONNECT",
@@ -15,6 +18,9 @@ var RESPONSE_TYPE = {
     START_GAME: "START_GAME",
     DISPATCH: "DISPATCH",
     FIRE: "FIRE",
+    GANG: "GANG",
+    HU: "HU",
+    GIVE_UP: "GIVE_UP",
 }
 var socket;
 var host = "http://localhost:8080";
@@ -25,6 +31,7 @@ var app = new Vue({
             userId: "",
             connected: false,
             started: false,
+            starter: "",
             userRequest: {
                 roomId: -1,
                 type: "",
@@ -79,10 +86,16 @@ var app = new Vue({
                         app.handleCreateRoom(resp);
                     } else if (resp.type == RESPONSE_TYPE.JOIN_ROOM) {
                         app.handleJoinRoom(resp);
-                    } else if (resp.type == RESPONSE_TYPE.START_GAME || resp.type == RESPONSE_TYPE.FIRE) {
+                    } else if (resp.type == RESPONSE_TYPE.START_GAME
+                                || resp.type == RESPONSE_TYPE.FIRE
+                                || resp.type == RESPONSE_TYPE.GANG) {
                         app.handleStartGame(resp);
                     } else if (resp.type == RESPONSE_TYPE.DISPATCH) {
                         app.handleDispatch(resp);
+                    } else if (resp.type == RESPONSE_TYPE.PENG) {
+                        app.handlePeng(resp);
+                    } else if (resp.type == RESPONSE_TYPE.HU) {
+                        app.handleHu(resp);
                     }
                 };
                 //关闭事件
@@ -172,6 +185,7 @@ var app = new Vue({
                 message(data.message);
             } else {
                 app.userGame = data.data;
+                app.starter = data.data.roomer;
                 app.started = true;
                 if (data.data.myTurn && !data.data.hasOperation) {
                     app.dispatch();
@@ -236,6 +250,42 @@ var app = new Vue({
             app.send(app.userRequest);
 
         },
+
+        peng() {
+            app.userRequest = {};
+            app.userRequest.type = REQUEST_TYPE.PENG;
+            app.send(app.userRequest);
+        },
+
+        handlePeng(data) {
+            if (data.code != 200) {
+                message(data.message);
+            } else {
+                app.userGame = data.data;
+            }
+        },
+
+        gang() {
+            app.userRequest = {};
+            app.userRequest.type = REQUEST_TYPE.GANG;
+            app.send(app.userRequest);
+        },
+
+        hu() {
+            app.userRequest = {};
+            app.userRequest.type = REQUEST_TYPE.HU;
+            app.send(app.userRequest);
+        }
+
+        handleHu(data) {
+            if (data.code != 200) {
+                message(data.message);
+            } else {
+                app.userGame = data.data;
+                app.started = false;
+                app.starter = data.data.userHu.banker;
+            }
+        }
 
     }
 });

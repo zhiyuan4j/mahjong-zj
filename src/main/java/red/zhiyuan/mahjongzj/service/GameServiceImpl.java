@@ -217,9 +217,7 @@ public class GameServiceImpl implements IGameService {
 
         room.getManager().startGame(players);
 
-        for (int i=0; i<players.size(); i++) {
-
-            Player player = players.get(i);
+        for (Player player : players) {
 
             UserGameVO userGameVO = new UserGameVO();
             userGameVO.setPeng(false);
@@ -227,7 +225,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setHu(false);
             userGameVO.setHasOperation(false);
             userGameVO.setMyOperation(false);
-            if (player.getId().equals(room.getRoomer())) {
+            if (player.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
             } else {
                 userGameVO.setMyTurn(false);
@@ -279,7 +277,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setPeng(p.getPeng());
             userGameVO.setGang(p.getGang());
             userGameVO.setHu(p.getHu());
-            if (p.getId().equals(userId)) {
+            if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setDispatch(buildMahjongVO(dispatch));
                 userGameVO.setMyTurn(true);
             } else {
@@ -315,7 +313,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setGang(p.getGang());
             userGameVO.setHu(p.getHu());
             userGameVO.setDispatch(null);
-            if (room.getManager().getNextPlayer(userId).getId().equals(p.getId())) {
+            if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
             } else {
                 userGameVO.setMyTurn(false);
@@ -333,23 +331,129 @@ public class GameServiceImpl implements IGameService {
     }
 
     @Override
-    public void peng() {
+    public void peng(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return;
+        }
 
+        Integer roomId = userRoomMap.get(userId);
+        Room room = roomMap.get(roomId);
+        room.getManager().peng();
+
+        room.getManager().getPlayers().forEach(p -> {
+
+            UserGameVO userGameVO = new UserGameVO();
+            userGameVO.setPeng(false);
+            userGameVO.setGang(false);
+            userGameVO.setHu(false);
+            userGameVO.setDispatch(null);
+            if (p.getId().equals(room.getManager().getTurnUser())) {
+                userGameVO.setMyTurn(true);
+            } else {
+                userGameVO.setMyTurn(false);
+            }
+            userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
+            userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
+            userGameVO.setPrivateMahjongs(p.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            userGameVO.setUserPublics(buildUserVO(room.getManager()));
+            userGameVO.setUserId(p.getId());
+            userGameVO.setLeftMahjongCount(room.getManager().getAllMahjongs().size() - room.getManager().getNextDispatchIndex());
+            userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
+            userGameVO.setFiredMahjongs(room.getManager().getFiredMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            MessageUtil.send(JsonReturn.success(UserResponseType.PENG.name(), userGameVO), p.getSession());
+        });
     }
 
     @Override
-    public void gang() {
+    public void gang(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return;
+        }
 
+        Integer roomId = userRoomMap.get(userId);
+        Room room = roomMap.get(roomId);
+        room.getManager().gang();
+
+        room.getManager().getPlayers().forEach(p -> {
+
+            UserGameVO userGameVO = new UserGameVO();
+            userGameVO.setPeng(false);
+            userGameVO.setGang(false);
+            userGameVO.setHu(false);
+            userGameVO.setDispatch(null);
+            if (p.getId().equals(room.getManager().getTurnUser())) {
+                userGameVO.setMyTurn(true);
+            } else {
+                userGameVO.setMyTurn(false);
+            }
+            userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
+            userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
+            userGameVO.setPrivateMahjongs(p.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            userGameVO.setUserPublics(buildUserVO(room.getManager()));
+            userGameVO.setUserId(p.getId());
+            userGameVO.setLeftMahjongCount(room.getManager().getAllMahjongs().size() - room.getManager().getNextDispatchIndex());
+            userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
+            userGameVO.setFiredMahjongs(room.getManager().getFiredMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            MessageUtil.send(JsonReturn.success(UserResponseType.GANG.name(), userGameVO), p.getSession());
+        });
     }
 
     @Override
-    public void hu() {
+    public void hu(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return;
+        }
 
+        Integer roomId = userRoomMap.get(userId);
+        Room room = roomMap.get(roomId);
+        List<List<BaseMahjong>> huList = room.getManager().hu();
+        room.getManager().getPlayers().forEach(p -> {
+            UserGameVO userGameVO = new UserGameVO();
+            userGameVO.setUserHu(buildUserHu(huList, userId));
+            MessageUtil.send(JsonReturn.success(UserResponseType.HU.name(), userGameVO), p.getSession());
+        });
+    }
+
+    private HuVO buildUserHu(List<List<BaseMahjong>> huList, String userId) {
+        HuVO vo = new HuVO();
+        vo.setBanker(userId);
+        vo.setHu(userId);
+        vo.setMahjongs(huList.stream().flatMap(List::stream).map(this::buildMahjongVO).collect(Collectors.toList()));
+        return vo;
     }
 
     @Override
-    public void giveUp() {
+    public void giveUp(String userId) {
+        if (StringUtils.isBlank(userId)) {
+            return;
+        }
 
+        Integer roomId = userRoomMap.get(userId);
+        Room room = roomMap.get(roomId);
+        room.getManager().giveUp(userId);
+
+        room.getManager().getPlayers().forEach(p -> {
+
+            UserGameVO userGameVO = new UserGameVO();
+            userGameVO.setPeng(false);
+            userGameVO.setGang(false);
+            userGameVO.setHu(false);
+            userGameVO.setDispatch(null);
+            if (p.getId().equals(room.getManager().getTurnUser())) {
+                userGameVO.setMyTurn(true);
+            } else {
+                userGameVO.setMyTurn(false);
+            }
+            userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
+            userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
+            userGameVO.setPrivateMahjongs(p.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            userGameVO.setUserPublics(buildUserVO(room.getManager()));
+            userGameVO.setUserId(p.getId());
+            userGameVO.setLeftMahjongCount(room.getManager().getAllMahjongs().size() - room.getManager().getNextDispatchIndex());
+            userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
+            userGameVO.setFiredMahjongs(room.getManager().getFiredMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
+            MessageUtil.send(JsonReturn.success(UserResponseType.GANG.name(), userGameVO), p.getSession());
+        });
     }
 
     private List<UserVO> buildUserVO(MahjongManager manager) {

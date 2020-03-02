@@ -27,4 +27,5 @@ public class UserGameVO implements Serializable {
     private Boolean hasOperation;
     private Boolean myOperation;
     private String userId;
+    private HuVO userHu;
 }

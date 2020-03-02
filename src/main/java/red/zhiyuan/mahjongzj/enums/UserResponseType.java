@@ -12,4 +12,9 @@ public enum UserResponseType {
     START_GAME,
     DISPATCH,
     FIRE,
+    PENG,
+    GANG,
+    HU,
+    GIVE_UP,
+
 }

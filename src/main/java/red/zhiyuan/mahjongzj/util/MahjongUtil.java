@@ -1,6 +1,7 @@
 package red.zhiyuan.mahjongzj.util;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 import red.zhiyuan.mahjongzj.enums.MahjongTypeEnum;
@@ -14,6 +15,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * @author zhiyuan.wang
@@ -24,6 +26,26 @@ public class MahjongUtil {
     public static CycleLink<BaseMahjong> numberMahjongLink = new CycleLink<>();
     public static CycleLink<BaseMahjong> fengMahjongLink = new CycleLink<>();
     public static CycleLink<BaseMahjong> specialMahjongLink = new CycleLink<>();
+    public static final Map<String, BaseMahjong> MAHJONG_MAP = Maps.newHashMap();
+
+    static {
+        Stream.of(MahjongTypeEnum.values()).forEach(typeEnum -> {
+            switch (typeEnum) {
+                case TIAO:
+                case BING:
+                case WAN:
+                    for (int i=1; i<=9; i++) {
+                        BaseMahjong mahjong = MahjongFactory.createMahjong(typeEnum.getType(), i);
+                        MAHJONG_MAP.put(mahjong.toString(), mahjong);
+                    }
+                    break;
+                default:
+                    BaseMahjong mahjong = MahjongFactory.createMahjong(typeEnum.getType(), null);
+                    MAHJONG_MAP.put(mahjong.toString(), mahjong);
+            }
+        });
+
+    }
 
     public static List<BaseMahjong> createZhenJiangMahjongs() {
         List<BaseMahjong> all = Lists.newArrayList();

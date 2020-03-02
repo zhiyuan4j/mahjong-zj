@@ -30,12 +30,12 @@ public interface IGameService {
 
     void fire(String userId, String fired);
 
-    void peng();
+    void peng(String userId);
 
-    void gang();
+    void gang(String userId);
 
-    void hu();
+    void hu(String userId);
 
-    void giveUp();
+    void giveUp(String userId);
 
 }

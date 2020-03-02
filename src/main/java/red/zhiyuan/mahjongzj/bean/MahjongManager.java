@@ -4,14 +4,14 @@ import com.google.common.collect.Lists;
 import lombok.Data;
 import org.apache.commons.lang3.RandomUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
 import red.zhiyuan.mahjongzj.model.BaseMahjong;
 import red.zhiyuan.mahjongzj.model.Dice;
 import red.zhiyuan.mahjongzj.struct.CycleLink;
 import red.zhiyuan.mahjongzj.util.MahjongUtil;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -39,6 +39,8 @@ public class MahjongManager {
     private List<BaseMahjong> firedMahjongs;
 
     private List<String> operationUsers;
+
+    private String turnUser;
 
     public void init() {
         allMahjongs = MahjongUtil.createZhenJiangMahjongs();
@@ -91,6 +93,7 @@ public class MahjongManager {
         firedMahjongs.add(fakeBaida);
         baida = getBaida(fakeBaida);
 
+        turnUser = getPlayers().get(0).getId();
     }
 
     // 摸牌
@@ -164,22 +167,107 @@ public class MahjongManager {
         operationUsers = Lists.newArrayList();
         addHuByOrder(userId);
         addPengOrGangByOrder(userId);
+
+        turnUser = playerLink.nextElement(player).getId();
     }
 
-    public void peng(String mahjong) {
+    public void peng() {
+        String mahjong = firedMahjongs.get(firedMahjongs.size() - 1).toString();
+        String user = operationUsers.get(0);
+        Player player = getPlayerInLink(user);
+        Iterator<BaseMahjong> iterator = player.getPrivateMahjongs().iterator();
+        int count = 0;
+        while (iterator.hasNext()) {
+            BaseMahjong next = iterator.next();
+            if (next.toString().equals(mahjong)) {
+                iterator.remove();
+                count++;
+            }
+            if (count == 2) {
+                break;
+            }
+        }
+
+        BaseMahjong pengMahjong = MahjongUtil.MAHJONG_MAP.get(mahjong);
+        player.getPublicMahjongs().add(Lists.newArrayList(pengMahjong, pengMahjong, pengMahjong));
+
+        firedMahjongs.remove(firedMahjongs.size() - 1);
+
+        operationUsers.clear();
+
+        turnUser = user;
+    }
+
+    public void gang() {
+        String user = operationUsers.get(0);
+        Player player = getPlayerInLink(user);
+        if (MahjongUtil.hasAnGang(player.getPrivateMahjongs())) {
+            anGang();
+        } else {
+            mingGang();
+        }
+        operationUsers.clear();
+        turnUser = user;
+    }
+
+    public void mingGang() {
+        String mahjong = firedMahjongs.get(firedMahjongs.size() - 1).toString();
+        String user = operationUsers.get(0);
+        Player player = getPlayerInLink(user);
+        Iterator<BaseMahjong> iterator = player.getPrivateMahjongs().iterator();
+        int count = 0;
+        while (iterator.hasNext()) {
+            BaseMahjong next = iterator.next();
+            if (next.toString().equals(mahjong)) {
+                iterator.remove();
+                count++;
+            }
+            if (count == 3) {
+                break;
+            }
+        }
+
+        BaseMahjong pengMahjong = MahjongUtil.MAHJONG_MAP.get(mahjong);
+        player.getPublicMahjongs().add(Lists.newArrayList(pengMahjong, pengMahjong, pengMahjong, pengMahjong));
+
+        firedMahjongs.remove(firedMahjongs.size() - 1);
 
     }
 
-    public void gang(String mahjong) {
+    public void anGang() {
+        String user = operationUsers.get(0);
+        Player player = getPlayerInLink(user);
 
+        List<BaseMahjong> privateMahjongs = player.getPrivateMahjongs();
+        Map<String, List<String>> mahjongGroup = privateMahjongs.stream().map(BaseMahjong::toString).collect(Collectors.groupingBy(Function.identity()));
+
+        mahjongGroup.forEach((k, v) -> {
+            if (v.size() == 4) {
+                List<BaseMahjong> targets = privateMahjongs.stream().filter(m -> m.toString().equals(k)).collect(Collectors.toList());
+                privateMahjongs.removeAll(targets);
+            }
+        });
     }
 
-    public void hu(String userId) {
+    public List<List<BaseMahjong>> hu() {
+        String userId = operationUsers.get(0);
+        Player player = getPlayerInLink(userId);
+        List<BaseMahjong> privateMahjongs = player.getPrivateMahjongs();
 
+        List<List<BaseMahjong>> zimo = MahjongUtil.hu(privateMahjongs, baida.toString());
+
+        if (CollectionUtils.isEmpty(zimo)) {
+            List<BaseMahjong> mahjongWithFired = Lists.newArrayList();
+            mahjongWithFired.addAll(privateMahjongs);
+            mahjongWithFired.add(firedMahjongs.get(firedMahjongs.size() - 1));
+            return MahjongUtil.hu(mahjongWithFired, baida.toString());
+        } else {
+            return zimo;
+        }
     }
 
-    public void giveUp(Integer userId) {
-        
+    public void giveUp(String userId) {
+        operationUsers.remove(userId);
     }
 
     private void addPengOrGangByOrder(String userId) {

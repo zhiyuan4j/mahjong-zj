@@ -69,6 +69,12 @@ public class WebSocketServer {
             gameService.dispatch(userId);
         } else if (UserResponseType.FIRE.name().equals(type)) {
             gameService.fire(userId, request.getMahjong());
+        } else if (UserResponseType.PENG.name().equals(type)) {
+            gameService.peng(userId);
+        } else if (UserResponseType.GANG.name().equals(type)) {
+            gameService.gang(userId);
+        } else if (UserResponseType.HU.name().equals(type)) {
+            gameService.hu(userId);
         }
 
     }
