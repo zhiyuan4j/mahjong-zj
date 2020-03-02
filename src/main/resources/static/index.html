@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <link rel="stylesheet" href="css/element.css">
+    <style>
+        #myCard .el-card__body {
+            padding: 0 0 !important;
+            text-align: center;
+            -webkit-writing-mode: vertical-rl;
+            writing-mode: vertical-rl;
+            letter-spacing:5px;
+            margin: 5px auto;
+        }
+        #myCard .el-card__body p {
+            margin: auto;
+        }
+        #publicCard .el-card__body {
+            padding: 0 0 !important;
+            text-align: center;
+            -webkit-writing-mode: vertical-rl;
+            writing-mode: vertical-rl;
+            letter-spacing:5px;
+            margin: 5px auto;
+        }
+        #publicCard .el-card__body p {
+            margin: auto;
+        }
+
+        #firedCard .el-card__body {
+            padding: 0 0 !important;
+            text-align: center;
+            -webkit-writing-mode: vertical-rl;
+            writing-mode: vertical-rl;
+            letter-spacing:5px;
+            margin: 5px auto;
+        }
+
+        #firedCard .el-card__body p {
+            margin: auto;
+        }
+
+        #hu .el-card__body {
+            padding: 0 0 !important;
+            text-align: center;
+            -webkit-writing-mode: vertical-rl;
+            writing-mode: vertical-rl;
+            letter-spacing:5px;
+            margin: 5px auto;
+        }
+
+        #hu .el-card__body p {
+            margin: auto;
+        }
+
+        .wan {
+            background-color: #ffc7c7;
+        }
+
+        .tiao {
+            background-color: #E4FFED;
+        }
+
+        .bing {
+            background-color: blanchedalmond;
+        }
+
+        .baida {
+            border: 1px solid red;
+        }
+
+        .default {
+            background-color: white;
+        }
+    </style>
+</head>
+<body>
+<noscript><h2 style="color: #ff0000">Seems your browser doesn't support Javascript! Websocket relies on Javascript being
+    enabled. Please enable
+    Javascript and reload this page!</h2></noscript>
+<div id="main-content">
+
+    <el-row :gutter="20" v-if="!room.roomId">
+        <el-col :span="12" :offset="6">
+            <el-form :inline="true">
+                <el-form-item label="昵称">
+                    <el-input v-model="userId" placeholder="请输入昵称"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="openSocket" v-if="!connected">连接</el-button>
+                    <el-button type="danger" @click="disconnect" v-if="connected">断开</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+    <el-row :gutter="20" v-if="!room.roomId">
+        <el-col :span="12" :offset="6">
+            <el-form :inline="true">
+                <el-form-item label="选择房间">
+                    <el-select filterable :value="roomSelected" placeholder="请选择" @change="joinRoom">
+                        <el-option
+                                v-for="room in roomList"
+                                :key="room.roomId"
+                                :value="room.roomId">
+                            <span style="float: left">#{{ room.roomId }}</span>
+                            <span style="float: right; color: #8492a6; font-size: 13px">{{ room.playerCount }}人</span>
+                        </el-option>
+                    </el-select>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="getRoomList">刷新列表</el-button>
+                    <el-button type="danger" @click="createNewRoom">创建新房间</el-button>
+                </el-form-item>
+            </el-form>
+        </el-col>
+    </el-row>
+
+    <el-row v-if="room.roomId">
+
+        <el-container id="app">
+            <el-aside width="200px">
+                <el-button size="small" type="danger" @click="quitRoom">退出房间</el-button>
+                <h4>
+                    房间#{{ room.roomId }}
+                    <!--<el-switch-->
+                        <!--v-model="room.roomPublic"-->
+                        <!--active-text="开放"-->
+                        <!--inactive-text="私有"-->
+                        <!--active-value="true"-->
+                        <!--inactive-value="false">-->
+                    <!--</el-switch>-->
+                </h4>
+                <p v-for="player of room.players">{{ player }}</p>
+                <el-button v-if="room.roomer && room.roomer == userId && !started" size="small" type="primary" @click="startGame">开始游戏</el-button>
+            </el-aside>
+            <el-container v-if="started">
+
+                <!--</el-header>-->
+                <el-main style="height: 500px; border: 1px solid #eee; border-radius: 2px">
+                    <div id="publicCard">
+                        <el-row>
+                            <el-col :span="6" v-for="player of userGame.userPublics">
+                                <p>{{ player.userId }}</p>
+                                <el-divider></el-divider>
+                                <el-row v-for="publicType of player.publicMahjongs">
+                                    <el-col :span="4" v-for="item of publicType">
+                                        <el-card :class="getCardClass(item.name)">
+                                            <p>{{ item.name }}</p>
+                                        </el-card>
+                                    </el-col>
+                                </el-row>
+                                <el-divider></el-divider>
+                                <el-row id="firedCard">
+                                    <el-col :span="4" v-for="fired of player.firedMahjongs">
+                                        <el-card :class="getCardClass(fired.name)">
+                                            <p>{{fired.name}}</p>
+                                        </el-card>
+                                    </el-col>
+                                </el-row>
+                            </el-col>
+                        </el-row>
+                    </div>
+
+                    <el-divider></el-divider>
+
+                    <h4><span v-if="userGame && userGame.leftMahjongCount">(剩余{{userGame.leftMahjongCount}})</span>百搭:{{userGame.baida.name}}</h4>
+
+                </el-main>
+                <el-footer style="margin-top: 10px">
+
+                    <el-row id="myCard">
+                        <el-col :span="1" v-for="card of userGame.privateMahjongs">
+                            <el-card class="myCard" :class="getCardClass(card.name)" @dblclick.native="fire(card.name)">
+                                <p>{{ card.name }}</p>
+                            </el-card>
+                        </el-col>
+
+                        <el-col :span="1">
+                            <div>&nbsp;</div>
+                        </el-col>
+
+                        <el-col :span="1">
+                            <el-card class="newGetCard" :class="getCardClass(userGame.dispatch.name)" @dblclick.native="fire(userGame.dispatch.name)" v-if="userGame.dispatch && userGame.dispatch.name">
+                                <p>{{ userGame.dispatch.name }}</p>
+                            </el-card>
+                            <div v-else>&nbsp;</div>
+                        </el-col>
+
+                        <el-col :span="1">
+                            <div>&nbsp;</div>
+                        </el-col>
+
+                        <template v-if="userGame.myOperation">
+
+                            <el-col :span="2">
+                                <el-button type="primary" :disabled="!userGame.peng" @click="">碰</el-button>
+                            </el-col>
+
+                            <el-col :span="2">
+                                <el-button type="primary" :disabled="!userGame.gang" @click="">杠</el-button>
+                            </el-col>
+
+                            <el-col :span="2">
+                                <el-button type="danger" :disabled="!userGame.hu" @click="">胡</el-button>
+                            </el-col>
+
+                            <el-col :span="2">
+                                <el-button type="danger" :disabled="!userGame.hu && !userGame.peng && !userGame.gang" @click="">弃</el-button>
+                            </el-col>
+
+                        </template>
+
+                    </el-row>
+
+
+                </el-footer>
+            </el-container>
+        </el-container>
+
+    </el-row>
+
+
+</div>
+<script src="js/jquery-2.1.1.min.js"></script>
+<script src="js/vue-2.6.11.js"></script>
+<script src="js/element.js"></script>
+<script src="js/mahjong.js"></script>
+</body>
+</html>
