@@ -166,6 +166,22 @@ public class MahjongManager {
         addPengOrGangByOrder(userId);
     }
 
+    public void peng(String mahjong) {
+
+    }
+
+    public void gang(String mahjong) {
+
+    }
+
+    public void hu(String userId) {
+
+    }
+
+    public void giveUp(Integer userId) {
+        
+    }
+
     private void addPengOrGangByOrder(String userId) {
         Player currentPlayer = getPlayerInLink(userId);
         for (int i=0; i<getPlayers().size() - 1; i++) {
