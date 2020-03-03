@@ -218,7 +218,7 @@ public class GameServiceImpl implements IGameService {
         }
         List<Player> players = room.getUsers().stream().map(this::buildPlayer).collect(Collectors.toList());
 
-        room.getManager().startGame(players);
+        room.getManager().startGame(players, room.getRoomer());
 
         for (Player player : players) {
 
@@ -417,10 +417,12 @@ public class GameServiceImpl implements IGameService {
 
         Integer roomId = userRoomMap.get(userId);
         Room room = roomMap.get(roomId);
+        room.setRoomer(userId);
         List<List<BaseMahjong>> huList = room.getManager().hu();
         room.getManager().getPlayers().forEach(p -> {
             UserGameVO userGameVO = new UserGameVO();
             userGameVO.setUserHu(buildUserHu(huList, userId));
+            userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
             MessageUtil.send(JsonReturn.success(UserResponseType.HU.name(), userGameVO), p.getSession());
         });
     }
@@ -446,23 +448,9 @@ public class GameServiceImpl implements IGameService {
         room.getManager().getPlayers().forEach(p -> {
 
             UserGameVO userGameVO = new UserGameVO();
-            userGameVO.setPeng(false);
-            userGameVO.setGang(false);
-            userGameVO.setHu(false);
-            if (p.getId().equals(room.getManager().getTurnUser())) {
-                userGameVO.setMyTurn(true);
-            } else {
-                userGameVO.setMyTurn(false);
-            }
-            userGameVO.setCanDispatch(false);
             userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
             userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
-            userGameVO.setPrivateMahjongs(p.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
-            userGameVO.setUserPublics(buildUserVO(room.getManager()));
             userGameVO.setUserId(p.getId());
-            userGameVO.setLeftMahjongCount(room.getManager().getAllMahjongs().size() - room.getManager().getNextDispatchIndex());
-            userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
-            userGameVO.setFiredMahjongs(room.getManager().getFiredMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
             MessageUtil.send(JsonReturn.success(UserResponseType.GIVE_UP.name(), userGameVO), p.getSession());
         });
     }

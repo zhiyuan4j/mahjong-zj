@@ -206,7 +206,7 @@
                             </el-col>
 
                             <el-col :span="2">
-                                <el-button type="danger" :disabled="!userGame.hu" @click="hu">胡</el-button>
+                                <el-button type="danger" :disabled="!userGame.hu" @click="huPai">胡</el-button>
                             </el-col>
 
                             <el-col :span="2">
@@ -229,8 +229,8 @@
                width="60%">
         <el-row id="hu">
             <el-col :span="1" v-for="card of huData.cards">
-                <el-card :class="getCardClass(card)">
-                    <p>{{ card }}</p>
+                <el-card :class="getCardClass(card.name)">
+                    <p>{{ card.name }}</p>
                 </el-card>
             </el-col>
         </el-row>

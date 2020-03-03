@@ -123,15 +123,17 @@ public class MahjongUtil {
         if (!CollectionUtils.isEmpty(hu(privateMahjongs, baida))) {
             return true;
         } else if (fired != null && notHasBaida(privateMahjongs, baida)) {
-            privateMahjongs.add(fired);
-            return !CollectionUtils.isEmpty(hu(privateMahjongs, baida));
+            List<BaseMahjong> mahjongWithFired = Lists.newArrayList();
+            mahjongWithFired.addAll(privateMahjongs);
+            mahjongWithFired.add(fired);
+            return !CollectionUtils.isEmpty(hu(mahjongWithFired, baida));
         } else {
             return false;
         }
     }
 
     private static boolean notHasBaida(List<BaseMahjong> privateMahjongs, String baida) {
-        return privateMahjongs.stream().anyMatch(mah -> mah.toString().equals(baida));
+        return privateMahjongs.stream().noneMatch(mah -> mah.toString().equals(baida));
     }
 
     public static List<List<BaseMahjong>> hu(List<BaseMahjong> privateMahjongs, String baida) {
@@ -368,6 +370,7 @@ public class MahjongUtil {
 
     private static List<BaseMahjong> createNumberMahjong(Integer type) {
         List<BaseMahjong> mahjongs = Lists.newArrayList();
+        CycleLink<BaseMahjong> numberMahjongLink = new CycleLink<>();
         for (int i=1; i<=9; i++) {
             mahjongs.add(MahjongFactory.createMahjong(type, i));
             mahjongs.add(MahjongFactory.createMahjong(type, i));
@@ -375,6 +378,8 @@ public class MahjongUtil {
             mahjongs.add(MahjongFactory.createMahjong(type, i));
             numberMahjongLink.add(MahjongFactory.createMahjong(type, i));
         }
+        numberMapMahjongLink.put(type, numberMahjongLink);
+
         return mahjongs;
     }
 

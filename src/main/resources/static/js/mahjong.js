@@ -194,7 +194,7 @@ var app = new Vue({
                 app.hu = {};
                 app.userGame = data.data;
                 app.started = true;
-                if (data.data.canDispatch) {
+                if (!data.data.hasOperation && data.data.canDispatch) {
                     app.dispatch();
                 }
             }
@@ -280,7 +280,7 @@ var app = new Vue({
             app.send(app.userRequest);
         },
 
-        hu() {
+        huPai() {
             app.userRequest = {};
             app.userRequest.type = REQUEST_TYPE.HU;
             app.send(app.userRequest);
@@ -300,8 +300,8 @@ var app = new Vue({
                 app.started = false;
                 app.starter = data.data.userHu.banker;
                 app.huDialogVisible = true;
-                app.huData.name = data.data.hu;
-                app.huData.cards = data.data.mahjongs;
+                app.huData.name = data.data.userHu.hu;
+                app.huData.cards = data.data.userHu.mahjongs;
             }
         },
 
@@ -309,8 +309,9 @@ var app = new Vue({
             if (data.code != 200) {
                 message(data.message);
             } else {
-                app.userGame = data.data;
-                if (data.data.canDispatch) {
+                app.userGame.hasOperation = data.data.hasOperation;
+                app.userGame.myOperation = data.data.myOperation;
+                if (!data.data.hasOperation && app.userGame.canDispatch) {
                     app.dispatch();
                 }
             }

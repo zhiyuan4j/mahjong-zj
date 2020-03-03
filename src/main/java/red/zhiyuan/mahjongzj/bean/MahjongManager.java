@@ -53,7 +53,7 @@ public class MahjongManager {
     }
 
     // 开局摸牌
-    public void startGame(List<Player> players) {
+    public void startGame(List<Player> players, String roomer) {
 
         init();
 
@@ -93,9 +93,7 @@ public class MahjongManager {
         firedMahjongs.add(fakeBaida);
         baida = getBaida(fakeBaida);
 
-        if (!CollectionUtils.isEmpty(getPlayers())) {
-            turnUser = getPlayers().get(0).getId();
-        }
+        turnUser = roomer;
     }
 
     // 摸牌
@@ -162,7 +160,7 @@ public class MahjongManager {
                 p.setHu(false);
             } else {
                 p.setPeng(MahjongUtil.hasPeng(fired, p.getPrivateMahjongs()));
-                p.setGang(MahjongUtil.hasAnGang(p.getPrivateMahjongs()) || MahjongUtil.hasMingGang(fired, p.getPrivateMahjongs()));
+                p.setGang(MahjongUtil.hasMingGang(fired, p.getPrivateMahjongs()));
                 p.setHu(MahjongUtil.hasHu(p.getPrivateMahjongs(), MahjongUtil.MAHJONG_MAP.get(fired), baida.toString()));
             }
         });
@@ -301,13 +299,16 @@ public class MahjongManager {
     }
 
     private BaseMahjong getBaida(BaseMahjong baseMahjong) {
-        int index = MahjongUtil.numberMahjongLink.getIndex(baseMahjong);
         if (baseMahjong.getType() <= 3) {
-            return MahjongUtil.numberMahjongLink.getNodeByIndex(index).next.data;
+            CycleLink<BaseMahjong> link = MahjongUtil.numberMapMahjongLink.get(baseMahjong.getType());
+            int index = link.getIndex(baseMahjong);
+            return link.getNodeByIndex(index).next.data;
         }
         if (baseMahjong.getType() >= 4 && baseMahjong.getType() <= 7) {
+            int index = MahjongUtil.fengMahjongLink.getIndex(baseMahjong);
             return MahjongUtil.fengMahjongLink.getNodeByIndex(index).next.data;
         }
+        int index = MahjongUtil.specialMahjongLink.getIndex(baseMahjong);
         return MahjongUtil.specialMahjongLink.getNodeByIndex(index).next.data;
     }
 
