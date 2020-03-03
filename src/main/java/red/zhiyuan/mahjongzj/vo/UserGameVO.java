@@ -20,6 +20,7 @@ public class UserGameVO implements Serializable {
     private List<MahjongVO> firedMahjongs;
 
     private MahjongVO dispatch;
+    private Boolean canDispatch;
     private Boolean peng;
     private Boolean gang;
     private Boolean hu;

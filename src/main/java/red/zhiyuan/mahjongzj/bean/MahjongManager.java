@@ -93,7 +93,9 @@ public class MahjongManager {
         firedMahjongs.add(fakeBaida);
         baida = getBaida(fakeBaida);
 
-        turnUser = getPlayers().get(0).getId();
+        if (!CollectionUtils.isEmpty(getPlayers())) {
+            turnUser = getPlayers().get(0).getId();
+        }
     }
 
     // 摸牌
@@ -102,7 +104,7 @@ public class MahjongManager {
         nextDispatchIndex++;
         List<BaseMahjong> privateMahjongs = getPlayerInLink(userId).getPrivateMahjongs();
         privateMahjongs.add(baseMahjong);
-        if (MahjongUtil.hasAnGang(privateMahjongs)) {
+        if (MahjongUtil.hasAnGang(privateMahjongs) || MahjongUtil.hasHu(privateMahjongs, null, baida.toString())) {
             operationUsers.add(userId);
         } else {
             operationUsers = Lists.newArrayList();
@@ -110,8 +112,9 @@ public class MahjongManager {
         getPlayers().forEach(p -> {
             p.setPeng(false);
             p.setGang(MahjongUtil.hasAnGang(p.getPrivateMahjongs()));
-            p.setHu(MahjongUtil.hasHu(p.getPrivateMahjongs(), baida.toString()));
+            p.setHu(MahjongUtil.hasHu(p.getPrivateMahjongs(), null, baida.toString()));
         });
+
         return baseMahjong;
     }
 
@@ -146,8 +149,8 @@ public class MahjongManager {
             }
         }
         player.getPrivateMahjongs().remove(firedMahjong);
+        player.getFiredMahjongs().add(firedMahjong);
         firedMahjongs.add(firedMahjong);
-
 
         getPlayers().forEach(p -> {
 
@@ -159,8 +162,8 @@ public class MahjongManager {
                 p.setHu(false);
             } else {
                 p.setPeng(MahjongUtil.hasPeng(fired, p.getPrivateMahjongs()));
-                p.setGang(MahjongUtil.hasAnGang(p.getPrivateMahjongs()));
-                p.setHu(MahjongUtil.hasHu(p.getPrivateMahjongs(), baida.toString()));
+                p.setGang(MahjongUtil.hasAnGang(p.getPrivateMahjongs()) || MahjongUtil.hasMingGang(fired, p.getPrivateMahjongs()));
+                p.setHu(MahjongUtil.hasHu(p.getPrivateMahjongs(), MahjongUtil.MAHJONG_MAP.get(fired), baida.toString()));
             }
         });
 

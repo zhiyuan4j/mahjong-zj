@@ -10,15 +10,18 @@ import red.zhiyuan.mahjongzj.bean.JsonReturn;
 import red.zhiyuan.mahjongzj.bean.MahjongManager;
 import red.zhiyuan.mahjongzj.bean.Player;
 import red.zhiyuan.mahjongzj.bean.Room;
-import red.zhiyuan.mahjongzj.enums.UserRequestType;
 import red.zhiyuan.mahjongzj.enums.UserResponseType;
 import red.zhiyuan.mahjongzj.model.BaseMahjong;
 import red.zhiyuan.mahjongzj.model.User;
-import red.zhiyuan.mahjongzj.util.MahjongUtil;
 import red.zhiyuan.mahjongzj.util.MessageUtil;
 import red.zhiyuan.mahjongzj.util.RoomConvertUtil;
 import red.zhiyuan.mahjongzj.util.SessionUtil;
-import red.zhiyuan.mahjongzj.vo.*;
+import red.zhiyuan.mahjongzj.vo.GameVO;
+import red.zhiyuan.mahjongzj.vo.HuVO;
+import red.zhiyuan.mahjongzj.vo.MahjongVO;
+import red.zhiyuan.mahjongzj.vo.RoomVO;
+import red.zhiyuan.mahjongzj.vo.UserGameVO;
+import red.zhiyuan.mahjongzj.vo.UserVO;
 
 import javax.websocket.Session;
 import java.util.List;
@@ -227,8 +230,10 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setMyOperation(false);
             if (player.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
+                userGameVO.setCanDispatch(true);
             } else {
                 userGameVO.setMyTurn(false);
+                userGameVO.setCanDispatch(false);
             }
             userGameVO.setPrivateMahjongs(player.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
             userGameVO.setUserPublics(Lists.newArrayList());
@@ -277,6 +282,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setPeng(p.getPeng());
             userGameVO.setGang(p.getGang());
             userGameVO.setHu(p.getHu());
+            userGameVO.setCanDispatch(false);
             if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setDispatch(buildMahjongVO(dispatch));
                 userGameVO.setMyTurn(true);
@@ -315,8 +321,10 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setDispatch(null);
             if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
+                userGameVO.setCanDispatch(true);
             } else {
                 userGameVO.setMyTurn(false);
+                userGameVO.setCanDispatch(false);
             }
             userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
             userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
@@ -347,6 +355,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setGang(false);
             userGameVO.setHu(false);
             userGameVO.setDispatch(null);
+            userGameVO.setCanDispatch(false);
             if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
             } else {
@@ -383,8 +392,10 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setDispatch(null);
             if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
+                userGameVO.setCanDispatch(true);
             } else {
                 userGameVO.setMyTurn(false);
+                userGameVO.setCanDispatch(false);
             }
             userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
             userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
@@ -438,12 +449,12 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setPeng(false);
             userGameVO.setGang(false);
             userGameVO.setHu(false);
-            userGameVO.setDispatch(null);
             if (p.getId().equals(room.getManager().getTurnUser())) {
                 userGameVO.setMyTurn(true);
             } else {
                 userGameVO.setMyTurn(false);
             }
+            userGameVO.setCanDispatch(false);
             userGameVO.setHasOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()));
             userGameVO.setMyOperation(!CollectionUtils.isEmpty(room.getManager().getOperationUsers()) && room.getManager().getOperationUsers().get(0).equals(p.getId()));
             userGameVO.setPrivateMahjongs(p.getPrivateMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
@@ -452,7 +463,7 @@ public class GameServiceImpl implements IGameService {
             userGameVO.setLeftMahjongCount(room.getManager().getAllMahjongs().size() - room.getManager().getNextDispatchIndex());
             userGameVO.setBaida(buildMahjongVO(room.getManager().getBaida()));
             userGameVO.setFiredMahjongs(room.getManager().getFiredMahjongs().stream().map(this::buildMahjongVO).collect(Collectors.toList()));
-            MessageUtil.send(JsonReturn.success(UserResponseType.GANG.name(), userGameVO), p.getSession());
+            MessageUtil.send(JsonReturn.success(UserResponseType.GIVE_UP.name(), userGameVO), p.getSession());
         });
     }
 

@@ -151,14 +151,6 @@
                                         </el-card>
                                     </el-col>
                                 </el-row>
-                                <el-divider></el-divider>
-                                <el-row id="firedCard">
-                                    <el-col :span="4" v-for="fired of player.firedMahjongs">
-                                        <el-card :class="getCardClass(fired.name)">
-                                            <p>{{fired.name}}</p>
-                                        </el-card>
-                                    </el-col>
-                                </el-row>
                             </el-col>
                         </el-row>
                     </div>
@@ -166,6 +158,17 @@
                     <el-divider></el-divider>
 
                     <h4><span v-if="userGame && userGame.leftMahjongCount">(剩余{{userGame.leftMahjongCount}})</span>百搭:{{userGame.baida.name}}</h4>
+
+                    <el-row id="firedCard" v-for="player of userGame.userPublics">
+                        <el-col :span="1">
+                            {{ player.userId }}
+                        </el-col>
+                        <el-col :span="1" v-for="fired of player.firedMahjongs">
+                            <el-card :class="getCardClass(fired.name)">
+                                <p>{{ fired.name }}</p>
+                            </el-card>
+                        </el-col>
+                    </el-row>
 
                 </el-main>
                 <el-footer style="margin-top: 10px">
@@ -195,19 +198,19 @@
                         <template v-if="userGame.myOperation">
 
                             <el-col :span="2">
-                                <el-button type="primary" :disabled="!userGame.peng" @click="">碰</el-button>
+                                <el-button type="primary" :disabled="!userGame.peng" @click="peng">碰</el-button>
                             </el-col>
 
                             <el-col :span="2">
-                                <el-button type="primary" :disabled="!userGame.gang" @click="">杠</el-button>
+                                <el-button type="primary" :disabled="!userGame.gang" @click="gang">杠</el-button>
                             </el-col>
 
                             <el-col :span="2">
-                                <el-button type="danger" :disabled="!userGame.hu" @click="">胡</el-button>
+                                <el-button type="danger" :disabled="!userGame.hu" @click="hu">胡</el-button>
                             </el-col>
 
                             <el-col :span="2">
-                                <el-button type="danger" :disabled="!userGame.hu && !userGame.peng && !userGame.gang" @click="">弃</el-button>
+                                <el-button type="danger" :disabled="!userGame.hu && !userGame.peng && !userGame.gang" @click="giveUp">弃</el-button>
                             </el-col>
 
                         </template>
@@ -221,6 +224,17 @@
 
     </el-row>
 
+    <el-dialog :title="huData.name + '胡啦'"
+               :visible.sync="huDialogVisible"
+               width="60%">
+        <el-row id="hu">
+            <el-col :span="1" v-for="card of huData.cards">
+                <el-card :class="getCardClass(card)">
+                    <p>{{ card }}</p>
+                </el-card>
+            </el-col>
+        </el-row>
+    </el-dialog>
 
 </div>
 <script src="js/jquery-2.1.1.min.js"></script>

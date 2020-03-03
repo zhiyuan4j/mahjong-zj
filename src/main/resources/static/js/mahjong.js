@@ -6,6 +6,7 @@ var REQUEST_TYPE = {
     START_GAME: "START_GAME",
     DISPATCH: "DISPATCH",
     FIRE: "FIRE",
+    PENG: "PENG",
     GANG: "GANG",
     HU: "HU",
     GIVE_UP: "GIVE_UP",
@@ -18,6 +19,7 @@ var RESPONSE_TYPE = {
     START_GAME: "START_GAME",
     DISPATCH: "DISPATCH",
     FIRE: "FIRE",
+    PENG: "PENG",
     GANG: "GANG",
     HU: "HU",
     GIVE_UP: "GIVE_UP",
@@ -48,7 +50,9 @@ var app = new Vue({
 
             userGame: {},
 
+            huData: {},
 
+            huDialogVisible: false
 
         }
     },
@@ -96,6 +100,8 @@ var app = new Vue({
                         app.handlePeng(resp);
                     } else if (resp.type == RESPONSE_TYPE.HU) {
                         app.handleHu(resp);
+                    } else if (resp.type == RESPONSE_TYPE.GIVE_UP) {
+                        app.handleGiveUp(resp);
                     }
                 };
                 //关闭事件
@@ -170,6 +176,7 @@ var app = new Vue({
                 message(data.message);
             } else {
                 app.room = data.data;
+                app.starter = data.data.roomer;
             }
         },
 
@@ -184,10 +191,10 @@ var app = new Vue({
             if (data.code != 200) {
                 message(data.message);
             } else {
+                app.hu = {};
                 app.userGame = data.data;
-                app.starter = data.data.roomer;
                 app.started = true;
-                if (data.data.myTurn && !data.data.hasOperation) {
+                if (data.data.canDispatch) {
                     app.dispatch();
                 }
             }
@@ -204,7 +211,7 @@ var app = new Vue({
             if (cardName.indexOf("饼") > -1) {
                 classes.push("bing");
             }
-            if (cardName == app.userGame.baida) {
+            if (cardName == app.userGame.baida.name) {
                 classes.push("baida");
             }
             return classes.join(" ");
@@ -228,7 +235,9 @@ var app = new Vue({
                 message(data.message);
             } else {
                 app.userGame = data.data;
-                app.userGame.privateMahjongs = data.data.privateMahjongs.slice(0, data.data.privateMahjongs.length - 1)
+                if (data.data.myTurn) {
+                    app.userGame.privateMahjongs = data.data.privateMahjongs.slice(0, data.data.privateMahjongs.length - 1)
+                }
             }
         },
 
@@ -275,7 +284,13 @@ var app = new Vue({
             app.userRequest = {};
             app.userRequest.type = REQUEST_TYPE.HU;
             app.send(app.userRequest);
-        }
+        },
+
+        giveUp() {
+            app.userRequest = {};
+            app.userRequest.type = REQUEST_TYPE.GIVE_UP;
+            app.send(app.userRequest);
+        },
 
         handleHu(data) {
             if (data.code != 200) {
@@ -284,6 +299,20 @@ var app = new Vue({
                 app.userGame = data.data;
                 app.started = false;
                 app.starter = data.data.userHu.banker;
+                app.huDialogVisible = true;
+                app.huData.name = data.data.hu;
+                app.huData.cards = data.data.mahjongs;
+            }
+        },
+
+        handleGiveUp(data) {
+            if (data.code != 200) {
+                message(data.message);
+            } else {
+                app.userGame = data.data;
+                if (data.data.canDispatch) {
+                    app.dispatch();
+                }
             }
         }
 

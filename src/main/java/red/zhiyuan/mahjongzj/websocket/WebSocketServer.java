@@ -75,6 +75,8 @@ public class WebSocketServer {
             gameService.gang(userId);
         } else if (UserResponseType.HU.name().equals(type)) {
             gameService.hu(userId);
+        } else if (UserResponseType.GIVE_UP.name().equals(type)) {
+            gameService.giveUp(userId);
         }
 
     }

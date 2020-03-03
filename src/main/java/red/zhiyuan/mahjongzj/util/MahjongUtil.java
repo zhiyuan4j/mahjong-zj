@@ -12,6 +12,7 @@ import red.zhiyuan.mahjongzj.struct.CycleLink;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
  */
 public class MahjongUtil {
 
-    public static CycleLink<BaseMahjong> numberMahjongLink = new CycleLink<>();
+    public static Map<Integer, CycleLink<BaseMahjong>> numberMapMahjongLink = new HashMap<>();
     public static CycleLink<BaseMahjong> fengMahjongLink = new CycleLink<>();
     public static CycleLink<BaseMahjong> specialMahjongLink = new CycleLink<>();
     public static final Map<String, BaseMahjong> MAHJONG_MAP = Maps.newHashMap();
@@ -118,8 +119,19 @@ public class MahjongUtil {
         return false;
     }
 
-    public static boolean hasHu(List<BaseMahjong> privateMahjongs, String baida) {
-        return !CollectionUtils.isEmpty(hu(privateMahjongs, baida));
+    public static boolean hasHu(List<BaseMahjong> privateMahjongs, BaseMahjong fired, String baida) {
+        if (!CollectionUtils.isEmpty(hu(privateMahjongs, baida))) {
+            return true;
+        } else if (fired != null && notHasBaida(privateMahjongs, baida)) {
+            privateMahjongs.add(fired);
+            return !CollectionUtils.isEmpty(hu(privateMahjongs, baida));
+        } else {
+            return false;
+        }
+    }
+
+    private static boolean notHasBaida(List<BaseMahjong> privateMahjongs, String baida) {
+        return privateMahjongs.stream().anyMatch(mah -> mah.toString().equals(baida));
     }
 
     public static List<List<BaseMahjong>> hu(List<BaseMahjong> privateMahjongs, String baida) {
